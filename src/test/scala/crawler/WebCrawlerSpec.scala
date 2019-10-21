@@ -177,7 +177,7 @@ class WebCrawlerSpec extends Specification with Mockito {
       override def fetchDocument(url: String): Either[Unit, Document] = url match {
         case "https://www.exampleSite.com" => Right(exampleSite1Html)
         case "https://www.exampleSite.com/page1" => Right(exampleSite2Html)
-        case u => println(u); Left(())
+        case _ => Left(())
       }
 
       override def urlCheck(url: String): Try[Document] = url match {
