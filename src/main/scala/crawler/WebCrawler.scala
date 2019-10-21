@@ -66,8 +66,8 @@ class WebCrawler {
             mappedAssets = mappedAssets + (url -> (mappedAssets.getOrElse(url, mutable.Set()) ++ extractAssets(m)))
           }
 
-          links.forEach { e =>
-              fetchLinksHelper (e.absUrl ("href"), urls)
+          links.forEach { l =>
+              fetchLinksHelper (l.absUrl ("href"), urls)
           }
       }
     }
@@ -87,15 +87,15 @@ class WebCrawler {
     @tailrec
     def makeDomainsHelper(assetMapping: Seq[(String, mutable.Set[String])], domains: Seq[UrlAssets]): Seq[UrlAssets] = {
       assetMapping match {
-        case (a, b) :: Nil => {
-          val finalDomains = domains ++ Seq(UrlAssets(a, b.toSet))
+        case (url, assets) :: Nil => {
+          val finalDomains = domains ++ Seq(UrlAssets(url, assets.toSet))
           finalDomains
         }
         case Nil => {
           println(s"No assets found for $originalUrl")
           domains ++ Seq(UrlAssets("", Set()))
         }
-        case (a, b) :: xs => makeDomainsHelper(xs, domains ++ Seq(UrlAssets(a, b.toSet)))
+        case (url, assets) :: xs => makeDomainsHelper(xs, domains ++ Seq(UrlAssets(url, assets.toSet)))
       }
     }
 
