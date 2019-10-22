@@ -16,6 +16,7 @@ import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 class WebCrawlerSpec extends Specification {
+  sequential
 
 
   "web crawler" should {
@@ -68,7 +69,7 @@ class WebCrawlerSpec extends Specification {
 
     }
 
-    "fetch links" in new Context {
+    "fetch assets" in new Context {
 
       val expected: Seq[(String, mutable.Set[String])] = Seq(("https://www.exampleSite.com", assetSetHomePage), ("https://www.exampleSite.com/page1", assetSetPage1))
 

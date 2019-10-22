@@ -14,3 +14,5 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-json" % "1.3.5",
   "io.lemonlabs" %% "scala-uri" % "1.5.1",
   "org.scala-lang.modules" % "scala-jline" % "2.12.1")
+
+parallelExecution in Test := false
