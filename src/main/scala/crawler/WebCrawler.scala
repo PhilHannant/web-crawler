@@ -105,18 +105,18 @@ class WebCrawler {
   /**
     * Extracts stylesheet, images and script assets for element provided
     */
-  def extractAssets(element: Element): mutable.Set[String] = {
+  def extractAssets(element: Element): Seq[String] = {
     assets(element.select("link[href]"), "href") ++ assets(element.select("[src]"), "src") ++ assets(element.getElementsByTag("script"), "src")
   }
 
   /**
     * Extracts assets relating to provided key from elements provided adding them to a mutable set
     */
-  def assets(elemments: Elements, key: String): mutable.Set[String] = {
-    val assetSet: mutable.Set[String] = mutable.Set()
+  def assets(elemments: Elements, key: String): Seq[String] = {
+    var assetSet: Seq[String] = Seq()
 
     elemments.forEach { elem =>
-      assetSet += elem.attr(key)
+      assetSet = assetSet :+ elem.attr(key)
     }
     assetSet
   }

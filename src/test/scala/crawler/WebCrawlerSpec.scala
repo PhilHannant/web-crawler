@@ -8,7 +8,6 @@ import io.circe.parser._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
-import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
@@ -16,7 +15,7 @@ import scala.collection.mutable
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-class WebCrawlerSpec extends Specification with Mockito {
+class WebCrawlerSpec extends Specification {
 
 
   "web crawler" should {
@@ -35,8 +34,8 @@ class WebCrawlerSpec extends Specification with Mockito {
                            |    {
                            |      "url" : "https://www.exampleSite.com/page1",
                            |      "assets" : [
-                           |        "https://www.exampleSite.com/page1/script.js",
                            |        "https://www.exampleSite.com/page1/style.css",
+                           |        "https://www.exampleSite.com/page1/script.js",
                            |        "https://www.exampleSite.com/page1/exampleimage.jpg"
                            |      ]
                            |    }
@@ -95,9 +94,9 @@ class WebCrawlerSpec extends Specification with Mockito {
 
       val elements: Elements = exampleSite1Html.select("link[href]")
 
-      val result: mutable.Set[String] = crawler.assets(elements, "href")
+      val result: Seq[String] = crawler.assets(elements, "href")
 
-      val expected: mutable.Set[String] = mutable.Set("https://www.exampleSite.com/style.css")
+      val expected: Seq[String] = Seq("https://www.exampleSite.com/style.css")
 
       result must beEqualTo(expected)
     }
@@ -106,9 +105,9 @@ class WebCrawlerSpec extends Specification with Mockito {
 
       val elements: Elements = testDocument.select("[src]")
 
-      val result: mutable.Set[String] = crawler.assets(elements, "src")
+      val result: Seq[String] = crawler.assets(elements, "src")
 
-      val expected: mutable.Set[String] = mutable.Set("../images/left1.gif", "../images/nov.gif", "../images/right1.gif")
+      val expected: Seq[String] = Seq("../images/nov.gif", "../images/left1.gif", "../images/right1.gif")
 
       result must beEqualTo(expected)
     }
