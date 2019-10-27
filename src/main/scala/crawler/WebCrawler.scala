@@ -46,37 +46,46 @@ class WebCrawler {
 
     val domain: String = extractHost(url)
 
+    val visitedUrls = mutable.Set[String]()
+
     var mappedAssets: Map[String, mutable.Set[String]] = Map()
 
-    def fetchLinksHelper(url: String, urls: mutable.Set[String]): Unit = {
+    val urls: mutable.Queue[String] = mutable.Queue[String]()
 
-      if (readFile().contains(url) || !compareDomains(domain, url)) return
+    urls += url
 
-      writeFile(url)
+    while(urls.nonEmpty) {
+      val urlToVisit = urls.dequeue()
+      if(!visitedUrls.contains(urlToVisit) && compareDomains(domain, urlToVisit)) {
+        visitedUrls += urlToVisit
 
-      val document: Either[Unit, Document] = fetchDocument(url)
+        println(s"$urlToVisit")
+        val document: Either[Unit, Document] = fetchDocument(urlToVisit)
 
-      document match {
-        case Left(()) => ()
-        case Right(doc) =>
-          val links: Elements = doc.select("a[href]")
-          val media: Elements = doc.select("[src], link[href]")
+        document match {
+          case Left(()) => ()
+          case Right(doc) =>
+            val links: Elements = doc.select("a[href]")
+            val media: Elements = doc.select("[src], link[href]")
 
-          media.forEach { m =>
-            mappedAssets = mappedAssets + (url -> (mappedAssets.getOrElse(url, mutable.Set()) ++ extractAssets(m)))
-          }
+            media.forEach { m =>
+              mappedAssets = mappedAssets + (urlToVisit -> (mappedAssets.getOrElse(urlToVisit, mutable.Set()) ++ extractAssets(m)))
+            }
 
-          links.forEach { l =>
-              fetchLinksHelper (l.absUrl ("href"), urls)
-          }
+            links.forEach { l =>
+              val nextUrl = l.absUrl("href")
+              if (compareDomains(domain, urlToVisit) && !visitedUrls.contains(nextUrl)) urls += nextUrl
+            }
+        }
       }
     }
-
-    fetchLinksHelper(url, mutable.Set())
 
     mappedAssets.toSeq
 
   }
+
+
+
 
   /**
     * Converts sequence returned from fetchAssets to the DomainAssets case class
@@ -144,9 +153,13 @@ class WebCrawler {
   /**
     * Compares provided url with original url to see if they are on the same domain
     */
-  def compareDomains(domain: String, url: String): Boolean =
-    Url.parse(url).apexDomain.getOrElse("") == domain
-
+  def compareDomains(domain: String, url: String): Boolean = {
+    val urlDomain: Try[Option[String]] = Try(Url.parse(url).apexDomain)
+    urlDomain match {
+      case Success(d) => d.getOrElse("") == domain
+      case Failure(_) => false
+    }
+  }
 
   /**
     * Try's to obtain the document from the url provided, if successful

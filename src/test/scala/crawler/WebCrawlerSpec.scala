@@ -18,7 +18,6 @@ import scala.util.{Failure, Success, Try}
 class WebCrawlerSpec extends Specification {
   sequential
 
-
   "web crawler" should {
 
     "crawl should take a url and should return json containing the domain assets" in new Context {
