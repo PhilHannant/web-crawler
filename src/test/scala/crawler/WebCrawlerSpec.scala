@@ -70,9 +70,9 @@ class WebCrawlerSpec extends Specification {
 
     "fetch assets" in new Context {
 
-      val expected: Seq[(String, mutable.Set[String])] = Seq(("https://www.exampleSite.com", assetSetHomePage), ("https://www.exampleSite.com/page1", assetSetPage1))
+      val expected: Seq[(String, Set[String])] = Seq(("https://www.exampleSite.com", assetSetHomePage), ("https://www.exampleSite.com/page1", assetSetPage1))
 
-      val result: Seq[(String, mutable.Set[String])] = crawler.fetchAssets("https://www.exampleSite.com")
+      val result: Seq[(String, Set[String])] = crawler.fetchAssets("https://www.exampleSite.com")
 
       result must beEqualTo(expected)
 
@@ -80,7 +80,7 @@ class WebCrawlerSpec extends Specification {
 
     "makeDomain should return all DomainsAssets" in new Context {
 
-      val assets: Seq[(String, mutable.Set[String])] = Seq(("https://www.exampleSite.com", assetSetHomePage), ("https://www.exampleSite.com/page1", assetSetPage1))
+      val assets: Seq[(String, Set[String])] = Seq(("https://www.exampleSite.com", assetSetHomePage), ("https://www.exampleSite.com/page1", assetSetPage1))
 
       val expected = DomainAssets(Seq(homePage, page1))
 
@@ -94,9 +94,9 @@ class WebCrawlerSpec extends Specification {
 
       val elements: Elements = exampleSite1Html.select("link[href]")
 
-      val result: Seq[String] = crawler.assets(elements, "href")
+      val result: Set[String] = crawler.assets(elements, "href")
 
-      val expected: Seq[String] = Seq("https://www.exampleSite.com/style.css")
+      val expected: Set[String] = Set("https://www.exampleSite.com/style.css")
 
       result must beEqualTo(expected)
     }
@@ -105,9 +105,9 @@ class WebCrawlerSpec extends Specification {
 
       val elements: Elements = testDocument.select("[src]")
 
-      val result: Seq[String] = crawler.assets(elements, "src")
+      val result: Set[String] = crawler.assets(elements, "src")
 
-      val expected: Seq[String] = Seq("../images/nov.gif", "../images/left1.gif", "../images/right1.gif")
+      val expected: Set[String] = Set("../images/nov.gif", "../images/left1.gif", "../images/right1.gif")
 
       result must beEqualTo(expected)
     }
@@ -162,8 +162,8 @@ class WebCrawlerSpec extends Specification {
 
     val testUrl: String = "https://www.exampleSite.com"
 
-    val assetSetHomePage: mutable.Set[String] = mutable.Set("https://www.exampleSite.com/style.css", "https://www.exampleSite.com/script.js")
-    val assetSetPage1: mutable.Set[String] = mutable.Set("https://www.exampleSite.com/page1/style.css", "https://www.exampleSite.com/page1/script.js", "https://www.exampleSite.com/page1/exampleimage.jpg")
+    val assetSetHomePage: Set[String] = Set("https://www.exampleSite.com/style.css", "https://www.exampleSite.com/script.js")
+    val assetSetPage1: Set[String] = Set("https://www.exampleSite.com/page1/style.css", "https://www.exampleSite.com/page1/script.js", "https://www.exampleSite.com/page1/exampleimage.jpg")
 
     val exampleSite1: File = new File(System.getProperty("user.dir") + "/ExampleSite-1.html")
     val exampleSite2: File = new File(System.getProperty("user.dir") + "/ExampleSite-2.html")
@@ -187,8 +187,6 @@ class WebCrawlerSpec extends Specification {
 
     val homePage: UrlAssets = UrlAssets("https://www.exampleSite.com", assetSetHomePage.toSet)
     val page1: UrlAssets = UrlAssets("https://www.exampleSite.com/page1", assetSetPage1.toSet)
-
-    crawler.setUpLinksFile()
 
     val testHtml = "<a href=\"../blog.html\" onmouseover=\"return setStatus('click to continue...');\" onmouseout=\"return setStatus('');\"><img src=\"../images/nov.gif\" width=\"18\" height=\"6\" border=\"0\" alt=\"November\"></a>\n<a href=\"blog021125.html\" onmouseover=\"roll2('left1','_over');return setStatus('previous days blog');\" onmouseout=\"roll2('left1');return setStatus('');\"><img src=\"../images/left1.gif\" width=\"6\" height=\"5\" border=\"0\" alt=\"previous day's blog\" name=\"left1\"></a>\n<a href=\"blog021127.html\" onmouseover=\"roll2('right1','_over');return setStatus('next days blog');\" onmouseout=\"roll2('right1');return setStatus('');\"><img src=\"../images/right1.gif\" width=\"6\" height=\"5\" border=\"0\" alt=\"next day's blog\" name=\"right1\"></a>"
 

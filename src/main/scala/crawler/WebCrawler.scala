@@ -4,6 +4,7 @@ import java.io.{File, FileOutputStream, PrintWriter}
 
 import adt.DomainAssetsDerives._
 import adt.{DomainAssets, UrlAssets}
+import cats.data.EitherT
 import io.circe.Json
 import io.circe.syntax._
 import io.lemonlabs.uri.Url
@@ -30,33 +31,33 @@ class WebCrawler {
     * Method that initiates ths crawl and returns json containing the domain assets
     */
   def crawl(url: String): Json = {
-    val assets: Seq[(String, mutable.Set[String])] = fetchAssets(url)
+    val assets: Seq[(String, Set[String])] = fetchAssets(url)
     val domainAssets: DomainAssets = makeDomains(assets, url)
     domainAssets.asJson
   }
 
   /**
     *
-    * Recursive solution to visit every url inside an a[href] and then
+    * Iterative solution to visit every url inside an a[href] and then
     * extract the media present on that url.
     *
     * Returning a sequence containing assets mapped tho their url
     */
-  def fetchAssets(url: String): Seq[(String, mutable.Set[String])] = {
+  def fetchAssets(url: String): Seq[(String, Set[String])] = {
 
     val domain: String = extractHost(url)
 
-    val visitedUrls = mutable.Set[String]()
+    var visitedUrls: Set[String] = Set.empty[String]
 
-    var mappedAssets: Map[String, mutable.Set[String]] = Map()
+    var mappedAssets: Map[String, Set[String]] = Map()
 
     val urls: mutable.Queue[String] = mutable.Queue[String]()
 
     urls += url
 
-    while(urls.nonEmpty) {
+    while (urls.nonEmpty) {
       val urlToVisit = urls.dequeue()
-      if(!visitedUrls.contains(urlToVisit) && compareDomains(domain, urlToVisit)) {
+      if (!visitedUrls.contains(urlToVisit) && compareDomains(domain, urlToVisit)) {
         visitedUrls += urlToVisit
 
         println(s"$urlToVisit")
@@ -69,7 +70,7 @@ class WebCrawler {
             val media: Elements = doc.select("[src], link[href]")
 
             media.forEach { m =>
-              mappedAssets = mappedAssets + (urlToVisit -> (mappedAssets.getOrElse(urlToVisit, mutable.Set()) ++ extractAssets(m)))
+              mappedAssets = mappedAssets + (urlToVisit -> (mappedAssets.getOrElse(urlToVisit, Set.empty[String]) ++ extractAssets(m)))
             }
 
             links.forEach { l =>
@@ -85,26 +86,18 @@ class WebCrawler {
   }
 
 
-
-
   /**
     * Converts sequence returned from fetchAssets to the DomainAssets case class
     * containing all mapped assets
     */
-  def makeDomains(allAssets: Seq[(String, mutable.Set[String])], originalUrl: String): DomainAssets = {
+  def makeDomains(allAssets: Seq[(String, Set[String])], originalUrl: String): DomainAssets = {
 
     @tailrec
-    def makeDomainsHelper(assetMapping: Seq[(String, mutable.Set[String])], domains: Seq[UrlAssets]): Seq[UrlAssets] = {
+    def makeDomainsHelper(assetMapping: Seq[(String, Set[String])], domains: Seq[UrlAssets]): Seq[UrlAssets] = {
       assetMapping match {
-        case (url, assets) :: Nil => {
-          val finalDomains = domains ++ Seq(UrlAssets(url, assets.toSet))
-          finalDomains
-        }
-        case Nil => {
-          println(s"No assets found for $originalUrl")
-          domains ++ Seq(UrlAssets("", Set()))
-        }
-        case (url, assets) :: xs => makeDomainsHelper(xs, domains ++ Seq(UrlAssets(url, assets.toSet)))
+        case (url, assets) :: Nil => domains ++ Seq(UrlAssets(url, assets))
+        case Nil => domains ++ Seq(UrlAssets("", Set()))
+        case (url, assets) :: xs => makeDomainsHelper(xs, domains ++ Seq(UrlAssets(url, assets)))
       }
     }
 
@@ -114,18 +107,18 @@ class WebCrawler {
   /**
     * Extracts stylesheet, images and script assets for element provided
     */
-  def extractAssets(element: Element): Seq[String] = {
+  def extractAssets(element: Element): Set[String] = {
     assets(element.select("link[href]"), "href") ++ assets(element.select("[src]"), "src") ++ assets(element.getElementsByTag("script"), "src")
   }
 
   /**
     * Extracts assets relating to provided key from elements provided adding them to a mutable set
     */
-  def assets(elemments: Elements, key: String): Seq[String] = {
-    var assetSet: Seq[String] = Seq()
+  def assets(elemments: Elements, key: String): Set[String] = {
+    var assetSet: Set[String] = Set.empty[String]
 
     elemments.forEach { elem =>
-      assetSet = assetSet :+ elem.attr(key)
+      assetSet += elem.attr(key)
     }
     assetSet
   }
@@ -167,45 +160,14 @@ class WebCrawler {
     */
   def fetchDocument(url: String): Either[Unit, Document] = {
     val document = Try(Jsoup.connect(url)
-        .userAgent(userAgent)
-        .timeout(5000)
+      .userAgent(userAgent)
+      .timeout(5000)
       .ignoreContentType(true)
       .get)
     document match {
       case Success(doc) => Right(doc)
       case Failure(_) => Left()
     }
-  }
-
-  /**
-    * Method to create file store on start up and delete it on exit
-    * always runs a delete first to ensure a clean file is there for each crawl
-    */
-  def setUpLinksFile(): Unit = {
-    linksToVisit.delete()
-    linksToVisit.createNewFile()
-    linksToVisit.deleteOnExit()
-  }
-
-  /**
-    * Writes urls that have been visited to file store
-    */
-  private def writeFile(urls: String): Unit = {
-    val writer = new PrintWriter(new FileOutputStream(linksToVisit, true))
-    writer.write(urls + "\n")
-    writer.close()
-  }
-
-  /**
-    * Try's to read the file store if successful returns a set containing urls visited
-    * else returns an empty set
-    */
-  private def readFile(): immutable.Set[String] = {
-    val linkFile = Try(Source.fromFile(linksToVisit))
-      linkFile match {
-        case Success(file) => file.getLines().toSet
-        case Failure(_) => immutable.Set()
-      }
   }
 
 }

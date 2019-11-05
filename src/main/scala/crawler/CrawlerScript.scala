@@ -23,8 +23,6 @@ object CrawlerScript {
 
     if (running) {
 
-      crawler.setUpLinksFile()
-
       val consoleReader: ConsoleReader = new tools.jline.console.ConsoleReader()
 
       val url: String = consoleReader.readLine("Please enter the url you wish to crawl:")
