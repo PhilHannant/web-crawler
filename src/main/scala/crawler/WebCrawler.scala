@@ -64,7 +64,7 @@ class WebCrawler {
         val document: Either[Unit, Document] = fetchDocument(urlToVisit)
 
         document match {
-          case Left(()) => ()
+          case Left(()) => println(s"broken link for $document")
           case Right(doc) =>
             val links: Elements = doc.select("a[href]")
             val media: Elements = doc.select("[src], link[href]")

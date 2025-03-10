@@ -1,7 +1,8 @@
 package crawler
 
+import org.jline.reader.{LineReader, LineReaderBuilder}
+
 import scala.annotation.tailrec
-import scala.tools.jline.console.ConsoleReader
 import scala.util.{Failure, Success}
 
 object CrawlerScript {
@@ -23,9 +24,9 @@ object CrawlerScript {
 
     if (running) {
 
-      val consoleReader: ConsoleReader = new tools.jline.console.ConsoleReader()
+      val lineReader: LineReader = LineReaderBuilder.builder().build()
 
-      val url: String = consoleReader.readLine("Please enter the url you wish to crawl:")
+      val url: String = lineReader.readLine("Please enter the url you wish to crawl:")
 
       println("Crawling........")
 
